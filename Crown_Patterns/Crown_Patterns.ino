@@ -6,7 +6,7 @@
 #endif
 
 // Pattern types supported:
-enum  pattern { NONE, RAINBOW_CYCLE, FADE, COLOR_RAIN, BREATHE_COLOR, BREATHE_COLOR_RANDOM, BLOCK_DROP, SPIKES};
+enum  pattern { NONE, RAINBOW_CYCLE, BREATHE_COLOR, BREATHE_COLOR_RANDOM, BLOCK_DROP, RAINBOW_SPIKES, RANDOM_SPIKES, STACK, EQUALIZER, SIDE_FILL, TWINKLE};
 // Patern directions supported:
 enum  direction { FORWARD, REVERSE };
 
@@ -63,12 +63,6 @@ class NeoPatterns : public Adafruit_NeoPixel {
           case RAINBOW_CYCLE:
             RainbowCycleUpdate();
             break;
-          case FADE:
-            FadeUpdate();
-            break;
-          case COLOR_RAIN:
-            ColorRainUpdate();
-            break;
           case BLOCK_DROP:
             BlockDropUpdate();
             break;
@@ -78,9 +72,24 @@ class NeoPatterns : public Adafruit_NeoPixel {
           case BREATHE_COLOR_RANDOM:
             BreatheColorUpdate();
             break;
-          case SPIKES:
-            SpikesUpdate();
+          case RAINBOW_SPIKES:
+            RainbowSpikesUpdate();
             break;
+          case RANDOM_SPIKES:
+            RandomSpikesUpdate();
+            break;
+//          case STACK:
+//            StackUpdate();
+//            break;
+//          case EQUALIZER:
+//            EqualizerUpdate();
+//            break;
+//          case SIDE_FILL:
+//            SideFillUpdate();
+//            break;
+//          case TWINKLE:
+//            TwinkleUpdate();
+//            break;
           default:
             break;
         }
@@ -115,28 +124,6 @@ class NeoPatterns : public Adafruit_NeoPixel {
       Increment();
     }
 
-
-    // Initialize for a Fade
-    void Fade(uint32_t color1, uint32_t color2, uint16_t steps, int interval) {
-      ActivePattern = FADE;
-      Interval      = interval;
-      TotalSteps    = steps;
-      Color1        = color1;
-      Color2        = color2;
-      Index         = 0;
-    }
-
-    // Update the Fade Pattern
-    void FadeUpdate() {
-      uint8_t red   = ((Red(Color1) * (TotalSteps - Index)) + (Red(Color2) * Index)) / TotalSteps;
-      uint8_t green = ((Green(Color1) * (TotalSteps - Index)) + (Green(Color2) * Index)) / TotalSteps;
-      uint8_t blue  = ((Blue(Color1) * (TotalSteps - Index)) + (Blue(Color2) * Index)) / TotalSteps;
-
-      ColorSet(Color(red, green, blue));
-      show();
-      Increment();
-    }
-
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
   // Custom Patterns Begin
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,40 +146,13 @@ class NeoPatterns : public Adafruit_NeoPixel {
          Counter2=0;
        }
       i = Index - Counter;
-      setPixelColor(i, Wheel(((i * 256 / numPixels()) + Index) & 255));
+      setPixelColor(i, Color1);
       setPixelColor(i-1, 0);
 
       if(i>numPixels()-2-Counter2){
         Counter = Index;
         Counter2++;
       }
-      show();
-      Increment();
-    }
-
-    //-------------------- COLOR RAIN---------------------------------------------------------
-
-    void ColorRain(uint32_t color1, uint32_t color2,  uint8_t interval) {
-      ActivePattern = COLOR_RAIN;
-      Interval = interval;
-      TotalSteps = numPixels()+5;
-      Color1 = color1;
-      Color2 = color2;
-      Index = 0;
-    }
-
-    void ColorRainUpdate(){
-      int rainSize = 5;
-
-      for(i=0; i<=rainSize; i++){
-        setPixelColor(Index+i-30, Color1);
-        setPixelColor(Index+i-rainSize-30, DimControl(Color2, 10));
-        setPixelColor(Index+i-rainSize, Color1);
-        setPixelColor(Index+i-rainSize-rainSize, DimControl(Color2, 10));
-        setPixelColor(Index+i+27, Color1); //change to 27 for roque
-        setPixelColor(Index+i-rainSize+27, DimControl(Color2, 10)); //change to 27 for roque
-      }
-
       show();
       Increment();
     }
@@ -257,74 +217,83 @@ class NeoPatterns : public Adafruit_NeoPixel {
     }
 
             // Initialize for a Spike
-    void Spikes(uint8_t interval, direction dir = FORWARD) {
-        ActivePattern = SPIKES;
+    void RainbowSpikes(uint8_t interval, direction dir = FORWARD) {
+        ActivePattern = RAINBOW_SPIKES;
         Interval      = interval;
         TotalSteps    = 255;
         Index         = 0;
     }
 
-    void setSpikeColor(uint8_t spike, uint8_t color) {
+    void setSpikeColor(uint8_t spike, uint32_t color) {
       switch(spike) {
         case 0:
           for (int i=0; i<21; i++) {
-            setPixelColor(i, Wheel(color));
+            setPixelColor(i, color);
           }
           break;
         case 1:
           for (int i=21; i<22; i++) {
-            setPixelColor(i, Wheel(color));
+            setPixelColor(i, color);
           }
           break;
         case 2:
           for (int i=22; i<24; i++) {
-            setPixelColor(i, Wheel(color));
+            setPixelColor(i, color);
           }
           break;
         case 3:
           for (int i=24; i<27; i++) {
-            setPixelColor(i, Wheel(color));
+            setPixelColor(i, color);
           }
           break;
         case 4:
           for (int i=27; i<31; i++) {
-            setPixelColor(i, Wheel(color));
+            setPixelColor(i, color);
           }
           break;
         case 5:
           for (int i=31; i<34; i++) {
-            setPixelColor(i, Wheel(color));
+            setPixelColor(i, color);
           }
           break;
         case 6:
           for (int i=34; i<36; i++) {
-            setPixelColor(i, Wheel(color));
+            setPixelColor(i, color);
           }
           break;
         case 7:
           for (int i=36; i<numPixels(); i++) {
-            setPixelColor(i, Wheel(color));
+            setPixelColor(i, color);
           }
           break;
       }
     }
 
         // Update the Rainbow Cycle Pattern
-//    void SpikesUpdate() {
-//      for (int i=0; i<8; i++) {
-//        setSpikeColor(i, i * 30 + Index);
-//      }
-//      show();
-//      Increment();
-//    }
+    void RainbowSpikesUpdate() {
+      for (int i=0; i<8; i++) {
+        setSpikeColor(i, i * 30 + Index);
+      }
+      show();
+      Increment();
+    }
 
-    void SpikesUpdate() {
-      setSpikeColor(0, 0);
+    // Initialize for a Random Spike
+    void RandomSpikes(uint8_t interval, int color, direction dir = FORWARD) {
+        ActivePattern = RANDOM_SPIKES;
+        Interval      = interval;
+        TotalSteps    = 255;
+        Index         = 0;
+        Color1        = color;
+    }
+
+    void RandomSpikesUpdate() {
+      setSpikeColor(0, Wheel(Color1));
       for (int i=1; i<8; i++) {
-        if (random(3) < 1) {
-         setSpikeColor(i, 0); 
+        if (random(3) < 2) {
+          setSpikeColor(i, 0); 
         } else {
-          setSpikeColor(i, 100);
+          setSpikeColor(i, Wheel(Color1));
         }
       }
       show();
@@ -368,36 +337,13 @@ class NeoPatterns : public Adafruit_NeoPixel {
       return dimColor;
     }
 
-//    uint32_t DimControl(uint32_t color, int i)                                       //MIGHT NEED THIS?------------------------------------------
-//    {
-//      uint32_t dimColor = Color(Red(color)/i, Green(color)/i, Blue(color)/i);
-//        return dimColor;
-//    }
-
-
      uint32_t DimControl(uint32_t color, int dimBright) {
       uint32_t dimColor;
-//      uint32_t redColor = Red(color);
-//      uint32_t greenColor = Green(color);
-//      uint32_t blueColor = Blue(color);
-//      if(i==0) {
-//        dimColor = Color(0, 0, 0);
-//      }
-//      else {
-//        redColor = redColor - i; //(255-i);
-//        greenColor = greenColor - i; //(255-i);
-//        blueColor = blueColor - i; //(255-i);
-//        if (redColor < 0) redColor = 0;
-//        if (greenColor < 0) greenColor = 0;
-//        if (blueColor < 0) blueColor = 0;
-
-        //dimColor = Color(Red(color)/i, Green(color)/i, Blue(color)/i);
-//        dimColor = Color(pgm_read_byte(&Gamma[dimBright*(Red(color))/255]), pgm_read_byte(&Gamma[dimBright*(Green(color))/255]), pgm_read_byte(&Gamma[dimBright*(Blue(color))/255]));
         dimColor = Color(dimBright*(Red(color))/255, dimBright*(Green(color))/255, dimBright*(Blue(color))/255);
 
-//      }
       return dimColor;
     }
+
     // Input a value 0 to 255 to get a color value.
     // The colours are a transition r - g - b - back to r.
     uint32_t Wheel(byte WheelPos) {
@@ -459,7 +405,7 @@ void pixelsComplete();
 NeoPatterns pixels(NEO_PIXEL_COUNT, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800, &pixelsComplete);
 
 ////////////// Change these accordingly //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int numberPatterns1 = 6;
+int numberPatterns1 = 11;
 
 bool randomPattern = false;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -468,7 +414,9 @@ void setup() {
   pixels.begin(); //start NeoPattern class
   pixels.show();
 
-  pixels.Spikes(100);
+  pixels.RandomSpikes(100, random(255));
+//  pixels.BreatheColor(pixels.Wheel(random(255)), 5);
+  //pixels.RainbowCycle(40);
 };
 
 void loop() {
@@ -494,45 +442,52 @@ void patternControl() {
   else {
     patternNumber = 1;
   }
-  patternNumber = 9;
-
-  int c1 = random(255);
-  int c2 = c1/2;
 
   pixels.Index = 0;
   pixels.CleanPixels();
 
   switch(patternNumber) {
     case 1:
-            pixels.RainbowCycle(40);
-            break;
-    case 2:
-            pixels.ColorRain(pixels.Wheel(255), pixels.Wheel(255), 40);
-            break;
-    case 3:
-            pixels.ColorRain(pixels.Wheel(70), pixels.Wheel(70), 40);
-            break;
-    case 4:
-            pixels.ColorRain(pixels.Wheel(170), pixels.Wheel(170), 40);
-            break;
-    case 5:
-            pixels.ColorRain(pixels.Wheel(random(255)), pixels.Wheel(random(255)), 40);
-            break;
-    case 6:
-            pixels.BreatheColor(pixels.Wheel(random(255)), 5);
-            break;
+      pixels.RainbowCycle(40);
+      break;
+    case 2: 
+      pixels.RandomSpikes(40, random(255));
+      break;
+//    case 3: 
+//      pixels.Stack(40);
+//      break;
+//    case 4: 
+//      pixels.Equalizer(40);
+//      break;
+//    case 5: 
+//      pixels.SideFill(40);
+//      break;
+//    case 6: 
+//      pixels.Twinkle(40);
+//      break;
     case 7:
-            pixels.BreatheColorRandom(pixels.Wheel(random(255)), pixels.Wheel(random(255)), 5);
-            break;
+      pixels.BreatheColor(pixels.Wheel(random(255)), 5);
+      break;
     case 8:
-            pixels.Fade(pixels.Wheel(c1), pixels.Wheel(c2), 100, 100);
-            break;
+      pixels.BlockDrop(pixels.Wheel(random(255)), 40);
+      break;
     case 9:
-            pixels.Spikes(40);
-            break;
+      pixels.BreatheColorRandom(pixels.Wheel(random(255)), pixels.Wheel(random(255)), 5);
+      break;
     case 10:
-            randomPattern = true;
-            pixels.Update();
-            break;
+      pixels.RainbowSpikes(40);
+      break;
+    case 11:
+      randomPattern = true;
+      pixels.Update();
+      break;
   }
 };
+
+  randomPattern = true;
+      pixels.Update();
+      break;
+  }
+};
+
+
