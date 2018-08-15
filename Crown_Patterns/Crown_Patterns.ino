@@ -484,10 +484,4 @@ void patternControl() {
   }
 };
 
-  randomPattern = true;
-      pixels.Update();
-      break;
-  }
-};
-
 
