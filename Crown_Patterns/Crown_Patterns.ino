@@ -6,7 +6,7 @@
 #endif
 
 // Pattern types supported:
-enum  pattern { NONE, RAINBOW_CYCLE, BREATHE_COLOR, BREATHE_COLOR_RANDOM, BLOCK_DROP, RAINBOW_SPIKES, RANDOM_SPIKES, STACK, EQUALIZER, SIDE_FILL, TWINKLE};
+enum  pattern { NONE, RAINBOW_CYCLE, BREATHE_COLOR, BREATHE_COLOR_RANDOM, BLOCK_DROP, EQUALIZER, RAINBOW_SPIKES, STACK, SIDE_FILL, TWINKLE};
 // Patern directions supported:
 enum  direction { FORWARD, REVERSE };
 
@@ -28,6 +28,17 @@ const uint8_t PROGMEM Gamma[] = {
   144,146,148,150,152,154,156,158,160,162,164,167,169,171,173,175,
   177,180,182,184,186,189,191,193,196,198,200,203,205,208,210,213,
   215,218,220,223,225,228,231,233,236,239,241,244,247,249,252,255 };
+
+const int crownDimensions[8][2] = {
+  {0, 21},
+  {21, 22},
+  {22, 24},
+  {24, 27},
+  {27, 31},
+  {31, 34},
+  {34, 36},
+  {36, 37}
+};
 
 // NeoPattern Class - derived from the Adafruit_NeoPixel class
 class NeoPatterns : public Adafruit_NeoPixel {
@@ -72,17 +83,14 @@ class NeoPatterns : public Adafruit_NeoPixel {
           case BREATHE_COLOR_RANDOM:
             BreatheColorUpdate();
             break;
+          case EQUALIZER:
+            EqualizerUpdate();
+            break;
           case RAINBOW_SPIKES:
             RainbowSpikesUpdate();
             break;
-          case RANDOM_SPIKES:
-            RandomSpikesUpdate();
-            break;
 //          case STACK:
 //            StackUpdate();
-//            break;
-//          case EQUALIZER:
-//            EqualizerUpdate();
 //            break;
 //          case SIDE_FILL:
 //            SideFillUpdate();
@@ -216,78 +224,24 @@ class NeoPatterns : public Adafruit_NeoPixel {
       Increment();
     }
 
-            // Initialize for a Spike
-    void RainbowSpikes(uint8_t interval, direction dir = FORWARD) {
-        ActivePattern = RAINBOW_SPIKES;
-        Interval      = interval;
-        TotalSteps    = 255;
-        Index         = 0;
-    }
-
+    // Set point of crown at index "spike" to color "color"
     void setSpikeColor(uint8_t spike, uint32_t color) {
-      switch(spike) {
-        case 0:
-          for (int i=0; i<21; i++) {
-            setPixelColor(i, color);
-          }
-          break;
-        case 1:
-          for (int i=21; i<22; i++) {
-            setPixelColor(i, color);
-          }
-          break;
-        case 2:
-          for (int i=22; i<24; i++) {
-            setPixelColor(i, color);
-          }
-          break;
-        case 3:
-          for (int i=24; i<27; i++) {
-            setPixelColor(i, color);
-          }
-          break;
-        case 4:
-          for (int i=27; i<31; i++) {
-            setPixelColor(i, color);
-          }
-          break;
-        case 5:
-          for (int i=31; i<34; i++) {
-            setPixelColor(i, color);
-          }
-          break;
-        case 6:
-          for (int i=34; i<36; i++) {
-            setPixelColor(i, color);
-          }
-          break;
-        case 7:
-          for (int i=36; i<numPixels(); i++) {
-            setPixelColor(i, color);
-          }
-          break;
+      for (int i=crownDimensions[spike][0]; i<crownDimensions[spike][1]; i++) {
+        setPixelColor(i, color);
       }
     }
-
-        // Update the Rainbow Cycle Pattern
-    void RainbowSpikesUpdate() {
-      for (int i=0; i<8; i++) {
-        setSpikeColor(i, i * 30 + Index);
-      }
-      show();
-      Increment();
-    }
-
-    // Initialize for a Random Spike
-    void RandomSpikes(uint8_t interval, int color, direction dir = FORWARD) {
-        ActivePattern = RANDOM_SPIKES;
+    
+    // Initialize for a Equalizer
+    void Equalizer(uint8_t interval, int color, direction dir = FORWARD) {
+        ActivePattern = EQUALIZER;
         Interval      = interval;
         TotalSteps    = 255;
         Index         = 0;
         Color1        = color;
     }
 
-    void RandomSpikesUpdate() {
+        // Update the Equalizer Pattern
+    void EqualizerUpdate() {
       setSpikeColor(0, Wheel(Color1));
       for (int i=1; i<8; i++) {
         if (random(3) < 2) {
@@ -295,6 +249,22 @@ class NeoPatterns : public Adafruit_NeoPixel {
         } else {
           setSpikeColor(i, Wheel(Color1));
         }
+      }
+      show();
+      Increment();
+    }
+
+    // Initialize for a Rainbow Spike
+    void RainbowSpikes(uint8_t interval, direction dir = FORWARD) {
+        ActivePattern = RAINBOW_SPIKES;
+        Interval      = interval;
+        TotalSteps    = 255;
+        Index         = 0;
+    }
+
+    void RainbowSpikesUpdate() {
+      for (int i=0; i<8; i++) {
+        setSpikeColor(i, Wheel(i * 30 + Index));
       }
       show();
       Increment();
@@ -405,7 +375,7 @@ void pixelsComplete();
 NeoPatterns pixels(NEO_PIXEL_COUNT, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800, &pixelsComplete);
 
 ////////////// Change these accordingly //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int numberPatterns1 = 11;
+int numberPatterns1 = 9;
 
 bool randomPattern = false;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -414,9 +384,10 @@ void setup() {
   pixels.begin(); //start NeoPattern class
   pixels.show();
 
-  pixels.RandomSpikes(100, random(255));
+  pixels.RainbowSpikes(100);
 //  pixels.BreatheColor(pixels.Wheel(random(255)), 5);
   //pixels.RainbowCycle(40);
+  //pixels.Equalizer(40, random(255));
 };
 
 void loop() {
@@ -451,37 +422,32 @@ void patternControl() {
       pixels.RainbowCycle(40);
       break;
     case 2: 
-      pixels.RandomSpikes(40, random(255));
+      pixels.RainbowSpikes(40);
       break;
 //    case 3: 
 //      pixels.Stack(40);
 //      break;
 //    case 4: 
-//      pixels.Equalizer(40);
-//      break;
-//    case 5: 
 //      pixels.SideFill(40);
 //      break;
-//    case 6: 
+//    case 5: 
 //      pixels.Twinkle(40);
 //      break;
-    case 7:
+    case 6:
       pixels.BreatheColor(pixels.Wheel(random(255)), 5);
       break;
-    case 8:
+    case 7:
       pixels.BlockDrop(pixels.Wheel(random(255)), 40);
       break;
-    case 9:
+    case 8:
       pixels.BreatheColorRandom(pixels.Wheel(random(255)), pixels.Wheel(random(255)), 5);
       break;
-    case 10:
-      pixels.RainbowSpikes(40);
-      break;
-    case 11:
+    case 9:
       randomPattern = true;
       pixels.Update();
       break;
   }
 };
+
 
 
