@@ -6,10 +6,7 @@
 #endif
 
 // Pattern types supported:
-enum  pattern { NONE, RAINBOW_CYCLE, BREATHE_COLOR, BREATHE_COLOR_RANDOM, BLOCK_DROP, EQUALIZER, RAINBOW_SPIKES, STACK, SIDE_FILL, TWINKLE};
-// Patern directions supported:
-enum  direction { FORWARD, REVERSE };
-
+const char* patterns[] = { "RAINBOW_CYCLE", "EQUALIZER", "RAINBOW_SPIKES", "STACK", "SIDE_FILL", "BREATHE_COLOR", "BLOCK_DROP", "BREATHE_COLOR_RANDOM", "TWINKLE" };
 
 const uint8_t PROGMEM Gamma[] = {
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -44,8 +41,7 @@ const int crownDimensions[8][2] = {
 class NeoPatterns : public Adafruit_NeoPixel {
   public:
     // Member Variables:
-    pattern  ActivePattern;  // which pattern is running
-    direction Direction;     // direction to run the pattern
+    int patternNumber;  // which pattern is running
 
     unsigned long Interval;   // milliseconds between updates
     unsigned long lastUpdate; // last update of position
@@ -72,32 +68,32 @@ class NeoPatterns : public Adafruit_NeoPixel {
     void Update() {
       if ((millis() - lastUpdate) > Interval) {
         lastUpdate = millis();
-        switch(ActivePattern) {
-          case RAINBOW_CYCLE:
+        switch(patternNumber) {
+          case 1:
             RainbowCycleUpdate();
             break;
-          case BLOCK_DROP:
+          case 7:
             BlockDropUpdate();
             break;
-          case BREATHE_COLOR:
+          case 6:
             BreatheColorUpdate();
             break;
-          case BREATHE_COLOR_RANDOM:
+          case 8:
             BreatheColorUpdate();
             break;
-          case EQUALIZER:
+          case 2:
             EqualizerUpdate();
             break;
-          case RAINBOW_SPIKES:
+          case 3:
             RainbowSpikesUpdate();
             break;
-//          case STACK:
+//          case "STACK":
 //            StackUpdate();
 //            break;
-//          case SIDE_FILL:
+//          case "SIDE_FILL":
 //            SideFillUpdate();
 //            break;
-//          case TWINKLE:
+//          case 9:
 //            TwinkleUpdate();
 //            break;
           default:
@@ -280,21 +276,6 @@ class NeoPatterns : public Adafruit_NeoPixel {
 ///////////////////// end of NeoPattern class ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-volatile int colorLock                    = 0;
-volatile int patternNumber                = 1; // keeps track of pattern
-
-
-//variables to keep track of the timing of recent interrupts
-unsigned long button_time_pattern         = 0;
-unsigned long last_button_time_pattern    = 0;
-unsigned long button_time_brightness      = 0;
-unsigned long last_button_time_brightness = 0;
-unsigned long button_time_bank            = 0;
-unsigned long last_button_time_bank       = 0;
-
-int debounceTime                          = 250; //in milliseconds
-
-// const int POWER_LED_PIN                = 13; // Output pin for power LED (pin 13 to use Teensy 3.0's onboard LED).
 const int NEO_PIXEL_PIN                   = 3; // Output pin for neo pixels.
 const int NEO_PIXEL_COUNT                 = 37; // Number of neo pixels. You should be able to increase this without
 
@@ -305,17 +286,11 @@ void pixelsComplete();
 
 NeoPatterns pixels(NEO_PIXEL_COUNT, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800, &pixelsComplete);
 
-////////////// Change these accordingly //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int numberPatterns1 = 9;
-
-bool randomPattern = false;
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+int numberPatterns =  (sizeof(patterns) / sizeof(char *));
 
 void setup() {
   pixels.begin(); //start NeoPattern class
   pixels.show();
-
-  pixels.ActivePattern = BREATHE_COLOR;
 };
 
 void loop() {
@@ -335,11 +310,11 @@ void pixelsComplete() {
 
 
 void patternControl() {
-  if (patternNumber < numberPatterns1) {
-    patternNumber++;
+  if (pixels.patternNumber < numberPatterns) {
+    pixels.patternNumber++;
   }
   else {
-    patternNumber = 1;
+    pixels.patternNumber = 1;
   }
 
   pixels.Index = 0;
@@ -352,39 +327,34 @@ void patternControl() {
   pixels.Color2 = pixels.Wheel(random(255));
   pixels.CleanPixels();
 
-  switch(patternNumber) {
+  switch(pixels.patternNumber) {
     case 1:
-      pixels.ActivePattern = RAINBOW_CYCLE;
-      break;
     case 2: 
-      pixels.ActivePattern = RAINBOW_SPIKES;
+    case 3: 
+      //pixels.ActivePattern = "EQUALIZER";
       break;
-//    case 3: 
-//      pixels.ActivePattern = RAINBOW_CYCLES;
-//      break;
 //    case 4: 
-//      pixels.ActivePattern = SIDE_FILL;
+//      pixels.ActivePattern = "SIDE_FILL";
 //      break;
 //    case 5: 
-//      pixels.ActivePattern = TWINKLE;
+//      pixels.ActivePattern = "TWINKLE";
 //      break;
     case 6:
-      pixels.ActivePattern = BREATHE_COLOR;
+      //pixels.ActivePattern = "BREATHE_COLOR";
       pixels.Interval = 5;
       pixels.TotalSteps = 512;
       break;
     case 7:
-      pixels.ActivePattern = BLOCK_DROP;
+      //pixels.ActivePattern = "BLOCK_DROP";
       pixels.TotalSteps = (NEO_PIXEL_COUNT*(NEO_PIXEL_COUNT+1))/2;
       pixels.TotalSteps = 512;
       break;
     case 8:
-      pixels.ActivePattern = BREATHE_COLOR_RANDOM;
+      //pixels.ActivePattern = "BREATHE_COLOR_RANDOM";
       pixels.Interval = 5;
       break;
     case 9:
-      randomPattern = true;
-      pixels.Update();
+      //pixels.ActivePattern = "STACK";
       break;
   }
 };
