@@ -53,8 +53,10 @@ class NeoPatterns : public Adafruit_NeoPixel {
     uint32_t Color1, Color2;  // What colors are in use
     uint16_t TotalSteps;  // total number of steps in the pattern
     uint16_t Index;  // current step within the pattern
-    int i;
-    int Counter;
+
+    // Block Drop variables
+    int i;                  // keeps track of number which LEDs to light up
+    int Counter1;           // keeps track of which particular LED is going to the bottom
     int Counter2;
 
     void (*OnComplete)();  // Callback on completion of pattern
@@ -101,6 +103,8 @@ class NeoPatterns : public Adafruit_NeoPixel {
           default:
             break;
         }
+        show();
+        Increment();
       }
     }
 
@@ -115,57 +119,38 @@ class NeoPatterns : public Adafruit_NeoPixel {
       }
     }
 
-        // Initialize for a RainbowCycle
-    void RainbowCycle(direction dir = FORWARD) {
-        ActivePattern = RAINBOW_CYCLE;
-        TotalSteps    = 255;
+    // Set point of crown at index "spike" to color "color"
+    void setSpikeColor(uint8_t spike, uint32_t color) {
+      for (int i=crownDimensions[spike][0]; i<crownDimensions[spike][1]; i++) {
+        setPixelColor(i, color);
+      }
     }
 
-        // Update the Rainbow Cycle Pattern
+
+    // Update pattern as index increases
+
+
+    // Update the Rainbow Cycle Pattern
     void RainbowCycleUpdate() {
       for (int i=0; i< numPixels(); i++) {
           setPixelColor(i, Wheel(((i * 256 / numPixels()) + Index) & 255));
       }
-      show();
-      Increment();
-    }
-
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////
-  // Custom Patterns Begin
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    void BlockDrop(uint32_t color1) {
-      ActivePattern = BLOCK_DROP;
-      TotalSteps    = (numPixels()*(numPixels()+1))/2;
-      Color1        = color1;
-      i             = 0; //keeps track of number which LEDs to light up
-      Counter       = 0; //keeps track of which particular LED is going to the bottom
-      Counter2      = 0;
     }
 
     void BlockDropUpdate() {
        if(Index==0){
          //CleanPixels();
-         Counter=0;
+         Counter1=0;
          Counter2=0;
        }
-      i = Index - Counter;
+      i = Index - Counter1;
       setPixelColor(i, Color1);
       setPixelColor(i-1, 0);
 
       if(i>numPixels()-2-Counter2){
-        Counter = Index;
+        Counter1 = Index;
         Counter2++;
       }
-      show();
-      Increment();
-    }
-
-    //------------ Breathe Color ----------------------//
-    void BreatheColor(int color1) {
-      ActivePattern = BREATHE_COLOR;
-      TotalSteps    = 512;
-      Color1        = color1;
     }
 
     // Update the Breathe Color pattern
@@ -181,17 +166,6 @@ class NeoPatterns : public Adafruit_NeoPixel {
           setPixelColor(i, DimControl(Color1, 512-Index));
         }
       }
-
-      show();
-      Increment();
-    }
-
-    //------------ Breathe Color ----------------------//
-    void BreatheColorRandom(int color1, int color2) {
-      ActivePattern = BREATHE_COLOR_RANDOM;
-      TotalSteps    = 512;
-      Color1        = color1;
-      Color2        = color2;
     }
 
     // Update the Breathe Color pattern
@@ -211,26 +185,9 @@ class NeoPatterns : public Adafruit_NeoPixel {
           setPixelColor(i, DimControl(Color(red, green, blue), 512-Index));
         }
       }
-
-      show();
-      Increment();
-    }
-
-    // Set point of crown at index "spike" to color "color"
-    void setSpikeColor(uint8_t spike, uint32_t color) {
-      for (int i=crownDimensions[spike][0]; i<crownDimensions[spike][1]; i++) {
-        setPixelColor(i, color);
-      }
     }
     
-    // Initialize for a Equalizer
-    void Equalizer(int color, direction dir = FORWARD) {
-        ActivePattern = EQUALIZER;
-        TotalSteps    = 255;
-        Color1        = color;
-    }
-
-        // Update the Equalizer Pattern
+    // Update the Equalizer Pattern
     void EqualizerUpdate() {
       setSpikeColor(0, Wheel(Color1));
       for (int i=1; i<8; i++) {
@@ -240,27 +197,13 @@ class NeoPatterns : public Adafruit_NeoPixel {
           setSpikeColor(i, Wheel(Color1));
         }
       }
-      show();
-      Increment();
-    }
-
-    // Initialize for a Rainbow Spike
-    void RainbowSpikes(direction dir = FORWARD) {
-        ActivePattern = RAINBOW_SPIKES;
-        TotalSteps    = 255;
     }
 
     void RainbowSpikesUpdate() {
       for (int i=0; i<8; i++) {
         setSpikeColor(i, Wheel(i * 30 + Index));
       }
-      show();
-      Increment();
     }
-
-
-
-
 
 
 //-------------------- ------------------------
@@ -372,10 +315,7 @@ void setup() {
   pixels.begin(); //start NeoPattern class
   pixels.show();
 
-  pixels.RainbowSpikes();
-//  pixels.BreatheColor(pixels.Wheel(random(255)), 5);
-  //pixels.RainbowCycle();
-  //pixels.Equalizer(random(255));
+  pixels.ActivePattern = BREATHE_COLOR;
 };
 
 void loop() {
@@ -403,34 +343,43 @@ void patternControl() {
   }
 
   pixels.Index = 0;
+  pixels.Counter1 = 0;
+  pixels.Counter2 = 0;
+  pixels.i = 0;
   pixels.Interval = 40;
+  pixels.TotalSteps = 255;
+  pixels.Color1 = pixels.Wheel(random(255));
+  pixels.Color2 = pixels.Wheel(random(255));
   pixels.CleanPixels();
 
   switch(patternNumber) {
     case 1:
-      pixels.RainbowCycle();
+      pixels.ActivePattern = RAINBOW_CYCLE;
       break;
     case 2: 
-      pixels.RainbowSpikes();
+      pixels.ActivePattern = RAINBOW_SPIKES;
       break;
 //    case 3: 
-//      pixels.Stack();
+//      pixels.ActivePattern = RAINBOW_CYCLES;
 //      break;
 //    case 4: 
-//      pixels.SideFill();
+//      pixels.ActivePattern = SIDE_FILL;
 //      break;
 //    case 5: 
-//      pixels.Twinkle();
+//      pixels.ActivePattern = TWINKLE;
 //      break;
     case 6:
-      pixels.BreatheColor(pixels.Wheel(random(255)));
+      pixels.ActivePattern = BREATHE_COLOR;
       pixels.Interval = 5;
+      pixels.TotalSteps = 512;
       break;
     case 7:
-      pixels.BlockDrop(pixels.Wheel(random(255)));
+      pixels.ActivePattern = BLOCK_DROP;
+      pixels.TotalSteps = (NEO_PIXEL_COUNT*(NEO_PIXEL_COUNT+1))/2;
+      pixels.TotalSteps = 512;
       break;
     case 8:
-      pixels.BreatheColorRandom(pixels.Wheel(random(255)), pixels.Wheel(random(255)));
+      pixels.ActivePattern = BREATHE_COLOR_RANDOM;
       pixels.Interval = 5;
       break;
     case 9:
@@ -439,6 +388,4 @@ void patternControl() {
       break;
   }
 };
-
-
 
