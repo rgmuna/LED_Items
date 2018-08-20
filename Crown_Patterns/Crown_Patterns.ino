@@ -116,11 +116,9 @@ class NeoPatterns : public Adafruit_NeoPixel {
     }
 
         // Initialize for a RainbowCycle
-    void RainbowCycle(uint8_t interval, direction dir = FORWARD) {
+    void RainbowCycle(direction dir = FORWARD) {
         ActivePattern = RAINBOW_CYCLE;
-        Interval      = interval;
         TotalSteps    = 255;
-        Index         = 0;
     }
 
         // Update the Rainbow Cycle Pattern
@@ -136,12 +134,10 @@ class NeoPatterns : public Adafruit_NeoPixel {
   // Custom Patterns Begin
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void BlockDrop(uint32_t color1, uint8_t interval) {
+    void BlockDrop(uint32_t color1) {
       ActivePattern = BLOCK_DROP;
-      Interval      = interval;
       TotalSteps    = (numPixels()*(numPixels()+1))/2;
       Color1        = color1;
-      Index         = 0;
       i             = 0; //keeps track of number which LEDs to light up
       Counter       = 0; //keeps track of which particular LED is going to the bottom
       Counter2      = 0;
@@ -166,11 +162,9 @@ class NeoPatterns : public Adafruit_NeoPixel {
     }
 
     //------------ Breathe Color ----------------------//
-    void BreatheColor(int color1, float interval) {
+    void BreatheColor(int color1) {
       ActivePattern = BREATHE_COLOR;
-      Interval      = interval;
       TotalSteps    = 512;
-      Index         = 0;
       Color1        = color1;
     }
 
@@ -193,11 +187,9 @@ class NeoPatterns : public Adafruit_NeoPixel {
     }
 
     //------------ Breathe Color ----------------------//
-    void BreatheColorRandom(int color1, int color2, float interval) {
+    void BreatheColorRandom(int color1, int color2) {
       ActivePattern = BREATHE_COLOR_RANDOM;
-      Interval      = interval;
       TotalSteps    = 512;
-      Index         = 0;
       Color1        = color1;
       Color2        = color2;
     }
@@ -232,11 +224,9 @@ class NeoPatterns : public Adafruit_NeoPixel {
     }
     
     // Initialize for a Equalizer
-    void Equalizer(uint8_t interval, int color, direction dir = FORWARD) {
+    void Equalizer(int color, direction dir = FORWARD) {
         ActivePattern = EQUALIZER;
-        Interval      = interval;
         TotalSteps    = 255;
-        Index         = 0;
         Color1        = color;
     }
 
@@ -255,11 +245,9 @@ class NeoPatterns : public Adafruit_NeoPixel {
     }
 
     // Initialize for a Rainbow Spike
-    void RainbowSpikes(uint8_t interval, direction dir = FORWARD) {
+    void RainbowSpikes(direction dir = FORWARD) {
         ActivePattern = RAINBOW_SPIKES;
-        Interval      = interval;
         TotalSteps    = 255;
-        Index         = 0;
     }
 
     void RainbowSpikesUpdate() {
@@ -384,10 +372,10 @@ void setup() {
   pixels.begin(); //start NeoPattern class
   pixels.show();
 
-  pixels.RainbowSpikes(100);
+  pixels.RainbowSpikes();
 //  pixels.BreatheColor(pixels.Wheel(random(255)), 5);
-  //pixels.RainbowCycle(40);
-  //pixels.Equalizer(40, random(255));
+  //pixels.RainbowCycle();
+  //pixels.Equalizer(random(255));
 };
 
 void loop() {
@@ -415,32 +403,35 @@ void patternControl() {
   }
 
   pixels.Index = 0;
+  pixels.Interval = 40;
   pixels.CleanPixels();
 
   switch(patternNumber) {
     case 1:
-      pixels.RainbowCycle(40);
+      pixels.RainbowCycle();
       break;
     case 2: 
-      pixels.RainbowSpikes(40);
+      pixels.RainbowSpikes();
       break;
 //    case 3: 
-//      pixels.Stack(40);
+//      pixels.Stack();
 //      break;
 //    case 4: 
-//      pixels.SideFill(40);
+//      pixels.SideFill();
 //      break;
 //    case 5: 
-//      pixels.Twinkle(40);
+//      pixels.Twinkle();
 //      break;
     case 6:
-      pixels.BreatheColor(pixels.Wheel(random(255)), 5);
+      pixels.BreatheColor(pixels.Wheel(random(255)));
+      pixels.Interval = 5;
       break;
     case 7:
-      pixels.BlockDrop(pixels.Wheel(random(255)), 40);
+      pixels.BlockDrop(pixels.Wheel(random(255)));
       break;
     case 8:
-      pixels.BreatheColorRandom(pixels.Wheel(random(255)), pixels.Wheel(random(255)), 5);
+      pixels.BreatheColorRandom(pixels.Wheel(random(255)), pixels.Wheel(random(255)));
+      pixels.Interval = 5;
       break;
     case 9:
       randomPattern = true;
