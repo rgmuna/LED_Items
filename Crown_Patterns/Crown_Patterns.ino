@@ -6,7 +6,7 @@
 #endif
 
 // Pattern types supported:
-const char* patterns[] = { "RAINBOW_CYCLE", "EQUALIZER", "RAINBOW_SPIKES", "STACK", "SIDE_FILL", "BREATHE_COLOR", "BLOCK_DROP", "BREATHE_COLOR_RANDOM", "TWINKLE" };
+const char* patterns[] = { "SIDE_FILL", "RAINBOW_CYCLE", "TWINKLE", "EQUALIZER", "RAINBOW_SPIKES", "STACK", "BREATHE_COLOR", "BLOCK_DROP", "BREATHE_COLOR_RANDOM" };
 
 const uint8_t PROGMEM Gamma[] = {
     0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -70,33 +70,31 @@ class NeoPatterns : public Adafruit_NeoPixel {
         lastUpdate = millis();
         switch(patternNumber) {
           case 1:
+            StackUpdate();
+            break;
+          case 2:
+            TwinkleUpdate();
+            break;
+          case 3:
+            SideFillUpdate();
+            break;
+          case 4:
+            RainbowSpikesUpdate();
+            break;
+          case 5:
             RainbowCycleUpdate();
             break;
-          case 7:
-            BlockDropUpdate();
-            break;
           case 6:
+            EqualizerUpdate();
+            break;
+          case 7:
             BreatheColorUpdate();
             break;
           case 8:
-            BreatheColorUpdate();
+            BlockDropUpdate();
             break;
-          case 2:
-            EqualizerUpdate();
-            break;
-          case 3:
-            RainbowSpikesUpdate();
-            break;
-//          case "STACK":
-//            StackUpdate();
-//            break;
-//          case "SIDE_FILL":
-//            SideFillUpdate();
-//            break;
-//          case 9:
-//            TwinkleUpdate();
-//            break;
-          default:
+          case 9:
+            BreatheColorRandomUpdate();
             break;
         }
         show();
@@ -119,6 +117,14 @@ class NeoPatterns : public Adafruit_NeoPixel {
     void setSpikeColor(uint8_t spike, uint32_t color) {
       for (int i=crownDimensions[spike][0]; i<crownDimensions[spike][1]; i++) {
         setPixelColor(i, color);
+      }
+    }
+
+    void setRowColor(uint8_t row, uint32_t color) {
+      for (int i=1; i<8; i++) {
+        if (crownDimensions[i][0] + row < crownDimensions[i][1]) {
+          setPixelColor(crownDimensions[i][0] + row, color); 
+        }
       }
     }
 
@@ -198,6 +204,39 @@ class NeoPatterns : public Adafruit_NeoPixel {
     void RainbowSpikesUpdate() {
       for (int i=0; i<8; i++) {
         setSpikeColor(i, Wheel(i * 30 + Index));
+      }
+    }
+
+    void StackUpdate() {
+      if (Index % 5 == 0) {
+        Color1 = random(255);
+        setSpikeColor(0, Wheel(Color1));
+      } else {
+        for (int i=0; i<Index % 5; i++) {
+          setRowColor(i, Color1);
+        }
+      }
+    }
+
+    void TwinkleUpdate() {
+      for (int i = 0; i < numPixels(); i++) {
+        if (random(10) < 1) {
+          setPixelColor(i, 255); 
+        } else {
+          setPixelColor(i, 0);
+        }
+      }
+    }
+
+    void SideFillUpdate() {
+      if (Index % 5 == 0) {
+        Color1 = random(255);
+        setSpikeColor(0, Wheel(Color1));
+      } else {
+          for (int i=1; i<=Index % 5; i++) {
+          setSpikeColor(i, Wheel(Color1));
+          setSpikeColor(8-i, Wheel(Color1));
+        } 
       }
     }
 
@@ -329,32 +368,32 @@ void patternControl() {
 
   switch(pixels.patternNumber) {
     case 1:
-    case 2: 
-    case 3: 
-      //pixels.ActivePattern = "EQUALIZER";
+      pixels.Interval = 1000;
+      pixels.TotalSteps = 5;
       break;
-//    case 4: 
-//      pixels.ActivePattern = "SIDE_FILL";
-//      break;
-//    case 5: 
-//      pixels.ActivePattern = "TWINKLE";
-//      break;
+    case 2: 
+      break;
+    case 3: 
+      pixels.Interval = 1000;
+      pixels.TotalSteps = 5;
+      break;
+    case 4: 
+    case 5: 
     case 6:
-      //pixels.ActivePattern = "BREATHE_COLOR";
-      pixels.Interval = 5;
-      pixels.TotalSteps = 512;
       break;
     case 7:
-      //pixels.ActivePattern = "BLOCK_DROP";
-      pixels.TotalSteps = (NEO_PIXEL_COUNT*(NEO_PIXEL_COUNT+1))/2;
+      // BREATHE_COLOR
+      pixels.Interval = 5;
       pixels.TotalSteps = 512;
       break;
     case 8:
-      //pixels.ActivePattern = "BREATHE_COLOR_RANDOM";
-      pixels.Interval = 5;
+      // BLOCK_DROP
+      pixels.TotalSteps = (NEO_PIXEL_COUNT*(NEO_PIXEL_COUNT+1))/2;
       break;
     case 9:
-      //pixels.ActivePattern = "STACK";
+      // BREATHE_COLOR_RANDOM
+      pixels.Interval = 5;
+      pixels.TotalSteps = 512;
       break;
   }
 };
