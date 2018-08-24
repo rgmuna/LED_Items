@@ -340,9 +340,6 @@ class NeoPatterns : public Adafruit_NeoPixel {
 volatile int colorLock                    = 0;
 volatile int patternNumber                = 1; // keeps track of pattern
 
-volatile int color1                       = 0;
-volatile int color2                       = 0;
-
 
 //variables to keep track of the timing of recent interrupts
 unsigned long button_time_pattern         = 0;
@@ -355,15 +352,17 @@ unsigned long last_button_time_bank       = 0;
 int debounceTime                          = 250; //in milliseconds
 
 // const int POWER_LED_PIN                = 13; // Output pin for power LED (pin 13 to use Teensy 3.0's onboard LED).
-const int NEO_PIXEL_PIN              = 3; // Output pin for neo pixels.
-const int NEO_PIXEL_COUNT                 = 25; // Number of neo pixels. You should be able to increase this without
+const int NEO_PIXEL_PIN_LEFT              = 3; // Output pin for neo pixels.
+const int NEO_PIXEL_PIN_RIGHT             = 22; // Output pin for neo pixels.
+const int NEO_PIXEL_COUNT                 = 21; // Number of neo pixels. You should be able to increase this without
 
 const int NumberLoops                     = 5;
 int trackLoops                            = 0;
 
 void pixelsComplete();
 
-NeoPatterns pixels(NEO_PIXEL_COUNT, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800, &pixelsComplete);
+NeoPatterns left_strand(NEO_PIXEL_COUNT, NEO_PIXEL_PIN_LEFT, NEO_GRB + NEO_KHZ800, &pixelsComplete);
+NeoPatterns right_strand(NEO_PIXEL_COUNT, NEO_PIXEL_PIN_RIGHT, NEO_GRB + NEO_KHZ800, &pixelsComplete);
 
 ////////////// Change these accordingly //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int numberPatterns = 12;
@@ -371,16 +370,20 @@ int numberPatterns = 12;
 
 void setup() {
   Serial.begin(38400);
-  pixels.begin(); //start NeoPattern class
-  pixels.show();
+  left_strand.begin(); //start NeoPattern class
+  left_strand.show();
 
-  pixels.ColorRain(pixels.Wheel(random(255)), pixels.Wheel(random(255)), 30);
+  left_strand.BlockPlacer(left_strand.Wheel(random(255)),left_strand.Wheel(random(255)), 20);
 
+  right_strand.begin(); //start NeoPattern class
+  right_strand.show();
 
+  right_strand.BlockPlacer(right_strand.Wheel(random(255)),right_strand.Wheel(random(255)), 20);
 };
 
 void loop() {
-  pixels.Update();
+  left_strand.Update();
+  right_strand.Update();
 };
 
 void pixelsComplete() {
@@ -398,52 +401,64 @@ void pixelsComplete() {
      patternControl();
   }
 
-  pixels.Update();
+  left_strand.Update();
+  right_strand.Update();
 };
 
 
 void patternControl() {
-  pixels.Index = 0;
-  color1 = pixels.DimControl(pixels.Wheel(random(255)), 100);
-  color2 = pixels.DimControl(pixels.Wheel(random(255)), 100);
+  left_strand.Index = 0;
+  right_strand.Index = 0;
 
-
+// NONE, RAINBOW_CYCLE, COLOR_RAIN, BLOCK_DROP, BLOCK_PLACER, THEATER_CHASE, COLOR_WIPE, COLOR_SWITCH
   switch(patternNumber) {
     case 1:
-            pixels.BlockPlacer(color1,color2, 40);
+            left_strand.BlockPlacer(left_strand.Wheel(random(255)),left_strand.Wheel(random(255)), 20);
+            right_strand.BlockPlacer(right_strand.Wheel(random(255)),right_strand.Wheel(random(255)), 20);
             break;
     case 2:
-            pixels.ColorWipe(color1, color2, 60);
+            left_strand.ColorWipe(left_strand.Wheel(random(255)), left_strand.Wheel(random(255)), 50);
+            right_strand.ColorWipe(right_strand.Wheel(random(255)), right_strand.Wheel(random(255)), 50);
             break;
     case 3:
-            pixels.ColorWipe(color1, color2, 50);
+            left_strand.ColorWipe(left_strand.Wheel(random(255)), left_strand.Wheel(random(255)), 40);
+            right_strand.ColorWipe(right_strand.Wheel(random(255)), right_strand.Wheel(random(255)), 40);
             break;
     case 4:
-            pixels.ColorRain(pixels.Wheel(255), pixels.Wheel(255), 30);
+            left_strand.ColorRain(left_strand.Wheel(255), left_strand.Wheel(255), 30);
+            right_strand.ColorRain(right_strand.Wheel(255), right_strand.Wheel(255), 30);
             break;
     case 5:
-            pixels.ColorRain(pixels.Wheel(70), pixels.Wheel(70), 40);
+            left_strand.ColorRain(left_strand.Wheel(70), left_strand.Wheel(70), 40);
+            right_strand.ColorRain(right_strand.Wheel(70), right_strand.Wheel(70), 40);
             break;
     case 6:
-            pixels.ColorRain(pixels.Wheel(170), pixels.Wheel(170), 50);
+            left_strand.ColorRain(left_strand.Wheel(170), left_strand.Wheel(170), 50);
+            right_strand.ColorRain(right_strand.Wheel(170), right_strand.Wheel(170), 50);
             break;
     case 7:
-            pixels.ColorRain(color1, pixels.Wheel(255), 60);
+            left_strand.ColorRain(left_strand.Wheel(random(255)), left_strand.Wheel(random(255)), 60);
+            right_strand.ColorRain(right_strand.Wheel(random(255)), right_strand.Wheel(random(255)), 60);
             break;
     case 8:
-            pixels.ColorRain(color1, pixels.Wheel(255), 60);
+            left_strand.BlockDrop(left_strand.Wheel(random(255)), 40);
+            right_strand.BlockDrop(right_strand.Wheel(random(255)), 40);
             break;
     case 9:
-            pixels.ColorSwitch(color1, color2, 80);
+            left_strand.ColorSwitch(left_strand.Wheel(random(255)), left_strand.Wheel(random(255)), 80);
+            right_strand.ColorSwitch(right_strand.Wheel(random(255)), right_strand.Wheel(random(255)),80);
             break;
     case 10:
-            pixels.ColorSwitch(color1, color2, 80);
+            left_strand.ColorSwitch(left_strand.Wheel(random(255)), left_strand.Wheel(random(255)), 80);
+            right_strand.ColorSwitch(right_strand.Wheel(random(255)), right_strand.Wheel(random(255)),80);
             break;
     case 11:
-            pixels.ColorSwitch(color1, color2, 80);
+            left_strand.ColorSwitch(left_strand.Wheel(random(255)), left_strand.Wheel(random(255)), 80);
+            right_strand.ColorSwitch(right_strand.Wheel(random(255)), right_strand.Wheel(random(255)),80);
             break;
     case 12:
-            pixels.RainbowCycle(40);
+            left_strand.RainbowCycle(40);
+            right_strand.RainbowCycle(40);
             break;
   }
 };
